@@ -1,0 +1,865 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DR to Invoice Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 20px 30px;
+            gap: 10px;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            background: white;
+            border: 2px solid #e9ecef;
+            font-size: 12px;
+            font-weight: bold;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .step.active {
+            border-color: #667eea;
+            background: #f0f4ff;
+            color: #667eea;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .form-section h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .form-row.three {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .form-subgroup {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .form-subgroup h3 {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .upload-area {
+            border: 2px dashed #667eea;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f0f4ff;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #e6e8ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e6e8ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-area p {
+            color: #666;
+            margin: 5px 0;
+        }
+
+        .upload-area strong {
+            color: #667eea;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .message {
+            padding: 15px;
+            border-radius: 6px;
+            margin: 20px 0;
+            display: none;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .message.show {
+            display: block;
+        }
+
+        .message.success {
+            background: #d1fae5;
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .message.error {
+            background: #fee2e2;
+            color: #7f1d1d;
+            border-left: 4px solid #ef4444;
+        }
+
+        .message.info {
+            background: #dbeafe;
+            color: #1e3a8a;
+            border-left: 4px solid #3b82f6;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .file-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .file-info.show {
+            display: block;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 14px;
+        }
+
+        .summary-item label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .summary-item value {
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .form-row.three {
+                grid-template-columns: 1fr;
+            }
+
+            .step-indicator {
+                flex-wrap: wrap;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📦 DR to Invoice Generator</h1>
+            <p>Delivery Request → Excel → XML → Tally → Invoice</p>
+        </div>
+
+        <div class="step-indicator">
+            <div class="step active" id="step1">Step 1<br>Upload PDF</div>
+            <div class="step" id="step2">Step 2<br>Verify</div>
+            <div class="step" id="step3">Step 3<br>Edit</div>
+            <div class="step" id="step4">Step 4<br>Generate</div>
+            <div class="step" id="step5">Step 5<br>Complete</div>
+        </div>
+
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressBar"></div>
+        </div>
+
+        <div class="content">
+            <!-- Step 1: Upload PDF -->
+            <div class="form-section active" id="section1">
+                <h2>Step 1: Upload Delivery Request PDF</h2>
+                
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📄</div>
+                    <p><strong>Click to upload</strong> or drag and drop</p>
+                    <p style="font-size: 12px; color: #999;">PDF files only (Max 50MB)</p>
+                    <input type="file" id="fileInput" accept=".pdf" />
+                </div>
+
+                <div class="file-info" id="fileInfo">
+                    <strong>File Selected:</strong> <span id="fileName"></span>
+                </div>
+
+                <div class="message" id="message1"></div>
+            </div>
+
+            <!-- Step 2: Verify Details -->
+            <div class="form-section" id="section2">
+                <h2>Step 2: Verify Extracted Details</h2>
+                
+                <div class="form-subgroup">
+                    <h3>DR Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>DR Number</label>
+                            <input type="text" id="drNo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="text" id="todayDate" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-subgroup">
+                    <h3>Part Details</h3>
+                    <div class="form-group">
+                        <label>Part Name</label>
+                        <input type="text" id="partName" readonly>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Part Number</label>
+                            <input type="text" id="partNo" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Order Number</label>
+                            <input type="text" id="orderNo" readonly>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Box Type</label>
+                            <input type="text" id="boxType" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit Size</label>
+                            <input type="text" id="unitSize" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-subgroup">
+                    <h3>Order Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Buyer's Order Number</label>
+                            <input type="text" id="buyersOrder" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="text" id="quantity" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="message" id="message2"></div>
+            </div>
+
+            <!-- Step 3: Edit Prompt -->
+            <div class="form-section" id="section3">
+                <h2>Step 3: Edit Prompt Details</h2>
+                
+                <div class="form-subgroup">
+                    <h3>Basic Information</h3>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Vehicle Number</label>
+                            <input type="text" id="vehicleNumber" value="TN13AH0050" placeholder="Enter vehicle number">
+                        </div>
+                        <div class="form-group">
+                            <label>Party Code</label>
+                            <input type="text" id="partyCode" readonly>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-subgroup">
+                    <h3>Kanban Details</h3>
+                    <div class="form-row three">
+                        <div class="form-group">
+                            <label>No. of Pieces</label>
+                            <input type="number" id="noOfPieces" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>No. of Packages</label>
+                            <input type="number" id="noOfPackages" value="1" placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Nos</label>
+                            <input type="number" id="totalNos" value="20" placeholder="20">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Kgs</label>
+                        <input type="text" id="totalKgs" placeholder="Enter total weight in kgs">
+                    </div>
+                </div>
+
+                <div class="form-subgroup">
+                    <h3>Crate Details</h3>
+                    <div class="form-group">
+                        <label>For Crate</label>
+                        <input type="text" id="forCrate" value="14403 - 1 NOS" placeholder="Crate details">
+                    </div>
+                    <div class="form-group">
+                        <label>Lid</label>
+                        <input type="text" id="lid" value="13054 - 1 NOS" placeholder="Lid details">
+                    </div>
+                    <div class="form-group">
+                        <label>DR Reference</label>
+                        <input type="text" id="drReference" readonly>
+                    </div>
+                </div>
+
+                <div class="message" id="message3"></div>
+            </div>
+
+            <!-- Step 4: Generate Files -->
+            <div class="form-section" id="section4">
+                <h2>Step 4: Generate Output Files</h2>
+                
+                <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px; color: #333;">Available Actions:</h3>
+                    <div style="display: grid; gap: 10px;">
+                        <button class="btn-success" id="genExcelBtn" onclick="generateExcel()">
+                            📊 Generate Excel File
+                        </button>
+                        <button class="btn-success" id="genXmlBtn" onclick="generateXML()">
+                            📋 Generate Tally XML
+                        </button>
+                        <button class="btn-success" id="genInvoiceBtn" onclick="generateInvoice()">
+                            🧾 Generate Invoice
+                        </button>
+                    </div>
+                </div>
+
+                <div style="background: #dbeafe; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none;" id="xmlPreview">
+                    <h4 style="color: #1e3a8a; margin-bottom: 10px;">XML Preview (for Tally):</h4>
+                    <pre style="background: white; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 11px; max-height: 200px; overflow-y: auto;" id="xmlContent"></pre>
+                </div>
+
+                <div class="message" id="message4"></div>
+            </div>
+
+            <!-- Step 5: Complete -->
+            <div class="form-section" id="section5">
+                <h2>Step 5: Process Complete ✅</h2>
+                
+                <div style="background: #d1fae5; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: none;" id="invoiceSummary">
+                    <h3 style="color: #065f46; margin-bottom: 15px;">Invoice Generated Successfully!</h3>
+                    <div id="invoiceSummaryContent"></div>
+                </div>
+
+                <div style="text-align: center; padding: 20px;">
+                    <button class="btn-primary" onclick="resetForm()">🔄 Process Another DR</button>
+                </div>
+
+                <div class="message" id="message5"></div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="buttons" id="navigationButtons">
+                <button class="btn-secondary" id="prevBtn" onclick="previousStep()" style="display: none;">← Previous</button>
+                <button class="btn-primary" id="nextBtn" onclick="nextStep()">Next →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 5;
+        let uploadedFile = null;
+        let promptData = {};
+
+        // File Upload Handling
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            handleFile(e.dataTransfer.files[0]);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFile(e.target.files[0]);
+        });
+
+        function handleFile(file) {
+            if (!file || file.type !== 'application/pdf') {
+                showMessage('message1', 'Please upload a PDF file', 'error');
+                return;
+            }
+
+            uploadedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileInfo').classList.add('show');
+
+            uploadPDF();
+        }
+
+        async function uploadPDF() {
+            const formData = new FormData();
+            formData.append('file', uploadedFile);
+
+            try {
+                showMessage('message1', '⏳ Uploading and extracting...');
+                const response = await fetch('/upload-dr', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                showMessage('message1', '✅ PDF uploaded successfully!', 'success');
+
+                // Populate Step 2
+                document.getElementById('drNo').value = result.details['DR No'] || '';
+                document.getElementById('todayDate').value = new Date().toLocaleDateString('en-GB');
+                document.getElementById('partName').value = result.details['Part Name'] || '';
+                document.getElementById('partNo').value = result.details['Part No'] || '';
+                document.getElementById('orderNo').value = result.details['Order No'] || '';
+                document.getElementById('boxType').value = result.details['Box Type'] || '';
+                document.getElementById('unitSize').value = result.details['Unit Size'] || '';
+                document.getElementById('buyersOrder').value = result.details['Buyer Order No'] || '';
+                document.getElementById('quantity').value = result.details['Quantity'] || '';
+
+                nextStep();
+            } catch (error) {
+                showMessage('message1', '❌ ' + error.message, 'error');
+            }
+        }
+
+        async function generatePrompt() {
+            try {
+                const response = await fetch('/generate-prompt');
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                promptData = result.prompt;
+
+                // Populate Step 3
+                document.getElementById('vehicleNumber').value = promptData.vehicle_number;
+                document.getElementById('partyCode').value = promptData.bill_details.party_name;
+                document.getElementById('noOfPieces').value = promptData.kanban.no_of_pieces;
+                document.getElementById('noOfPackages').value = promptData.kanban.no_of_packages;
+                document.getElementById('totalNos').value = promptData.kanban.total_nos;
+                document.getElementById('totalKgs').value = promptData.kanban.total_kgs;
+                document.getElementById('forCrate').value = promptData.crate_details.for_crate;
+                document.getElementById('lid').value = promptData.crate_details.lid;
+                document.getElementById('drReference').value = promptData.crate_details.dr_reference;
+
+                return true;
+            } catch (error) {
+                showMessage('message2', '❌ ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        async function savePrompt() {
+            promptData.vehicle_number = document.getElementById('vehicleNumber').value;
+            promptData.kanban.no_of_pieces = document.getElementById('noOfPieces').value;
+            promptData.kanban.no_of_packages = document.getElementById('noOfPackages').value;
+            promptData.kanban.total_nos = document.getElementById('totalNos').value;
+            promptData.kanban.total_kgs = document.getElementById('totalKgs').value;
+            promptData.crate_details.for_crate = document.getElementById('forCrate').value;
+            promptData.crate_details.lid = document.getElementById('lid').value;
+
+            try {
+                const response = await fetch('/verify-prompt', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: promptData })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                showMessage('message3', '✅ Prompt saved successfully!', 'success');
+                return true;
+            } catch (error) {
+                showMessage('message3', '❌ ' + error.message, 'error');
+                return false;
+            }
+        }
+
+        async function generateExcel() {
+            try {
+                document.getElementById('genExcelBtn').disabled = true;
+                showMessage('message4', '⏳ Generating Excel...', 'info');
+
+                const response = await fetch('/generate-excel', { method: 'POST' });
+
+                if (!response.ok) throw new Error('Failed to generate Excel');
+
+                const blob = await response.blob();
+                downloadFile(blob, `DR_${document.getElementById('drNo').value}_Invoice.xlsx`);
+
+                document.getElementById('genExcelBtn').disabled = false;
+                showMessage('message4', '✅ Excel file downloaded!', 'success');
+            } catch (error) {
+                document.getElementById('genExcelBtn').disabled = false;
+                showMessage('message4', '❌ ' + error.message, 'error');
+            }
+        }
+
+        async function generateXML() {
+            try {
+                document.getElementById('genXmlBtn').disabled = true;
+                showMessage('message4', '⏳ Generating Tally XML...', 'info');
+
+                const response = await fetch('/generate-xml', { method: 'POST' });
+
+                if (!response.ok) throw new Error('Failed to generate XML');
+
+                const blob = await response.blob();
+                const text = await blob.text();
+
+                document.getElementById('xmlContent').textContent = text;
+                document.getElementById('xmlPreview').style.display = 'block';
+
+                downloadFile(blob, `DR_${document.getElementById('drNo').value}_Tally.xml`);
+
+                document.getElementById('genXmlBtn').disabled = false;
+                showMessage('message4', '✅ XML file downloaded for Tally import!', 'success');
+            } catch (error) {
+                document.getElementById('genXmlBtn').disabled = false;
+                showMessage('message4', '❌ ' + error.message, 'error');
+            }
+        }
+
+        async function generateInvoice() {
+            try {
+                document.getElementById('genInvoiceBtn').disabled = true;
+                showMessage('message4', '⏳ Generating invoice...', 'info');
+
+                const response = await fetch('/generate-invoice', { method: 'POST' });
+                const result = await response.json();
+
+                if (!response.ok) throw new Error(result.error);
+
+                const invoice = result.invoice;
+
+                let summaryHTML = `
+                    <div class="summary-item"><label>Invoice Number:</label><value>${invoice.invoice_number}</value></div>
+                    <div class="summary-item"><label>DR Number:</label><value>${invoice.dr_number}</value></div>
+                    <div class="summary-item"><label>Date:</label><value>${invoice.date}</value></div>
+                    <div class="summary-item"><label>Party Code:</label><value>${invoice.party_code}</value></div>
+                    <div class="summary-item"><label>Vehicle:</label><value>${invoice.vehicle}</value></div>
+                    <div class="summary-item"><label>Part Number:</label><value>${invoice.part_no}</value></div>
+                    <div class="summary-item"><label>Part Name:</label><value>${invoice.part_name}</value></div>
+                    <div class="summary-item"><label>Quantity:</label><value>${invoice.quantity}</value></div>
+                    <div class="summary-item"><label>Status:</label><value style="color: #10b981; font-weight: bold;">${invoice.status}</value></div>
+                `;
+
+                document.getElementById('invoiceSummaryContent').innerHTML = summaryHTML;
+                document.getElementById('invoiceSummary').style.display = 'block';
+
+                document.getElementById('genInvoiceBtn').disabled = false;
+                showMessage('message4', '✅ Invoice generated successfully!', 'success');
+
+                setTimeout(() => nextStep(), 1500);
+            } catch (error) {
+                document.getElementById('genInvoiceBtn').disabled = false;
+                showMessage('message4', '❌ ' + error.message, 'error');
+            }
+        }
+
+        function downloadFile(blob, filename) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        }
+
+        function showMessage(elementId, message, type = 'info') {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `message show ${type}`;
+        }
+
+        async function nextStep() {
+            if (currentStep === 1) {
+                if (!uploadedFile) {
+                    showMessage('message1', 'Please upload a PDF first', 'error');
+                    return;
+                }
+            } else if (currentStep === 2) {
+                if (!(await generatePrompt())) return;
+            } else if (currentStep === 3) {
+                if (!(await savePrompt())) return;
+            } else if (currentStep === 4) {
+                showMessage('message5', '✅ All processes completed successfully!', 'success');
+            }
+
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateUI();
+            }
+        }
+
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateUI();
+            }
+        }
+
+        function updateUI() {
+            // Hide all sections
+            for (let i = 1; i <= totalSteps; i++) {
+                document.getElementById(`section${i}`).classList.remove('active');
+                document.getElementById(`step${i}`).classList.remove('active');
+            }
+
+            // Show current section
+            document.getElementById(`section${currentStep}`).classList.add('active');
+            document.getElementById(`step${currentStep}`).classList.add('active');
+
+            // Update progress bar
+            const progress = (currentStep / totalSteps) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+
+            // Update buttons
+            document.getElementById('prevBtn').style.display = currentStep > 1 ? 'block' : 'none';
+            document.getElementById('nextBtn').textContent = currentStep === totalSteps ? 'Finish' : 'Next →';
+
+            if (currentStep === 4) {
+                document.getElementById('nextBtn').style.display = 'none';
+            } else {
+                document.getElementById('nextBtn').style.display = 'block';
+            }
+        }
+
+        function resetForm() {
+            currentStep = 1;
+            uploadedFile = null;
+            promptData = {};
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').classList.remove('show');
+            document.getElementById('xmlPreview').style.display = 'none';
+            document.getElementById('invoiceSummary').style.display = 'none';
+
+            for (let i = 1; i <= totalSteps; i++) {
+                const section = document.getElementById(`section${i}`);
+                section.querySelectorAll('input').forEach(inp => inp.value = '');
+            }
+
+            updateUI();
+        }
+
+        // Initialize
+        updateUI();
+    </script>
+</body>
+</html>
